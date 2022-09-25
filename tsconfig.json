@@ -1,0 +1,23 @@
+{
+	"compilerOptions": {
+		"incremental": true,
+		"outDir": "./build/",
+		"module": "CommonJS",
+		"allowJs": true,
+		"target": "es6",
+		"declaration": true,
+		"sourceMap": true,
+		"forceConsistentCasingInFileNames": true,
+		"noImplicitReturns": true,
+		"noImplicitAny": true,
+		"noFallthroughCasesInSwitch": true,
+		"esModuleInterop": true,
+		"noEmitOnError": true,
+		"moduleResolution": "Node",
+		"skipLibCheck": true
+	},
+	"include": [
+		"./src/**/*.ts",
+		"./tests/**/*.ts"
+	]
+}

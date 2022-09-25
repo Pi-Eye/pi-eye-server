@@ -1,0 +1,43 @@
+{
+  "name": "pi-eye-server",
+  "version": "1.0.0",
+  "description": "Server side of Pi-Eye",
+  "main": "./build/src/server.js",
+  "types": "./build/src/server.d.ts",
+  "scripts": {
+    "lint": "eslint ./**/*.ts",
+    "build": "tsc -b",
+    "pretest": "npm run build",
+    "test": "mocha ./build/**/*.test.js",
+    "coverage": "nyc npm test",
+    "prestart": "npm run build",
+    "start": "node ./build/src/driver.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pi-Eye/pi-eye-server.git"
+  },
+  "author": "Bwu1324",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/Pi-Eye/pi-eye-server/issues"
+  },
+  "homepage": "https://github.com/Pi-Eye/pi-eye-server#readme",
+  "devDependencies": {
+    "@istanbuljs/nyc-config-typescript": "^1.0.2",
+    "@types/chai": "^4.3.3",
+    "@types/mocha": "^10.0.0",
+    "@types/node": "^18.11.9",
+    "@typescript-eslint/eslint-plugin": "^5.42.0",
+    "chai": "^4.3.6",
+    "eslint": "^8.27.0",
+    "mocha": "^10.1.0",
+    "nyc": "^15.1.0",
+    "typescript": "^4.8.4"
+  },
+  "dependencies": {
+    "camera-connection": "github:Pi-Eye/camera-connection",
+    "node-stream-processor": "github:Pi-Eye/node-stream-processor",
+    "node-stream-processor-types": "github:Pi-Eye/node-stream-processor-types"
+  }
+}
