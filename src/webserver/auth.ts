@@ -9,7 +9,7 @@ const INACTIVE_AUTH_CLEAR_MS = INACTIVE_AUTH_CLEAR * 60 * 60 * 1000;
 export enum Privilages {
   kView = 0,
   kEditCameraSettings = 1,
-  kEditServerSettings = 2
+  kEditServerSettings = 2,
 }
 
 type AuthConfig = {
@@ -36,6 +36,29 @@ export default class Auth {
   constructor(config_file_loc: string) {
     this.ReadConfigFile(config_file_loc);
 
+    setInterval(() => { // Remove expired keys every once in a while
+      for (const key in this.auth_table) {
+        if (this.auth_table[key].expires <= Date.now()) {
+          delete this.auth_table[key];
+        }
+      }
+    }, INACTIVE_AUTH_CLEAR_MS);
+  }
+
+  /**
+   * GetUsers() - Gets all avaliable users
+   * @returns List of users
+   */
+  GetUsers(): Array<{ user: string, privilage: Privilages }> {
+    const users: Array<{ user: string, privilage: Privilages }> = [];
+    for (let i = 0; i < this.config_.users.length; i++) {
+      users.push({
+        user: this.config_.users[i].user,
+        privilage: this.config_.users[i].privilage
+      });
+    }
+
+    return users;
   }
 
   /**
@@ -66,30 +89,28 @@ export default class Auth {
   }
 
   /**
-   * ChangePwd() - Changes password of a user
+   * DeleteUser() - Deletes a user
    * @param user username of user to change password
-   * @param pwd old password
-   * @param new_pwd new password
    * @returns true of successful, false if not
    */
-  async ChangePwd(user: string, pwd: string, new_pwd: string): Promise<boolean> {
+  async DeleteUser(user: string): Promise<boolean> {
     for (let i = 0; i < this.config_.users.length; i++) {
       const possible_user = this.config_.users[i];
       if (possible_user.user === user) {
         try {
-          if (!(await argon2.verify(possible_user.hash, pwd))) return false;
-        } catch (error) {
-          console.warn(`Error verifying hash: ${error}`);
-          return false;
-        }
-
-        try {
-          possible_user.hash = await argon2.hash(new_pwd);
-
+          this.config_.users.splice(i, 1);
           fs.writeFileSync(this.config_file_loc_, JSON.stringify(this.config_));
         } catch (error) {
           console.warn(`Error while adding new user: ${error}`);
         }
+
+        // Remove cookies of that user
+        for (const key in this.auth_table) {
+          if (this.auth_table[key].user === user) {
+            delete this.auth_table[key];
+          }
+        }
+
         return true;
 
       }

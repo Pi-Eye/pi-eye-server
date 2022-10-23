@@ -2,16 +2,14 @@
   "name": "pi-eye-server",
   "version": "1.0.0",
   "description": "Server side of Pi-Eye",
-  "main": "./build/src/server.js",
-  "types": "./build/src/server.d.ts",
+  "main": "./build/server.js",
+  "types": "./build/server.d.ts",
   "scripts": {
     "lint": "eslint ./**/*.ts",
     "build": "tsc -b",
-    "pretest": "npm run build",
-    "test": "mocha ./build/**/*.test.js",
     "coverage": "nyc npm test",
     "prestart": "npm run build",
-    "start": "node ./build/src/driver.js"
+    "start": "node ./build/driver.js"
   },
   "repository": {
     "type": "git",
@@ -24,26 +22,19 @@
   },
   "homepage": "https://github.com/Pi-Eye/pi-eye-server#readme",
   "devDependencies": {
-    "@istanbuljs/nyc-config-typescript": "^1.0.2",
-    "@types/chai": "^4.3.3",
-    "@types/cookie-parser": "^1.4.3",
     "@types/express": "^4.17.14",
-    "@types/mocha": "^10.0.0",
     "@types/node": "^18.11.9",
     "@typescript-eslint/eslint-plugin": "^5.42.0",
-    "chai": "^4.3.6",
     "eslint": "^8.27.0",
-    "mocha": "^10.1.0",
-    "nyc": "^15.1.0",
     "typescript": "^4.8.4"
   },
   "dependencies": {
     "argon2": "^0.30.2",
     "camera-connection": "github:Pi-Eye/camera-connection",
     "client-connection-server": "github:Pi-Eye/client-connection-server",
-    "cookie-parser": "^1.4.6",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
+    "https": "^1.0.0",
     "node-stream-processor": "github:Pi-Eye/node-stream-processor",
     "node-stream-processor-types": "github:Pi-Eye/node-stream-processor-types",
     "pi-eye-client": "github:Pi-Eye/pi-eye-client",

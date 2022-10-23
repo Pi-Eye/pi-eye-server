@@ -1,4 +1,5 @@
 import fs from "fs";
+import https from "https";
 import path from "path";
 import { EventEmitter } from "events";
 import TypedEmitter from "typed-emitter";
@@ -11,8 +12,16 @@ import Auth, { Privilages } from "./webserver/auth";
 
 import StartWebserver from "./webserver/web_server";
 
-const SOCKET_PORT = parseInt(process.env.SOCKET_PORT) || 8081;
+const WEB_PORT = parseInt(process.env.WEB_PORT) || 8080;
 const CONFIG_DIR = process.env.CONFIG_DIR || path.join(__dirname, "..", "..", "config");
+const PRIVATE_KEY_LOC = process.env.PRIVATE_KEY_LOC;
+const CERTIFICATE_LOC = process.env.CERTIFICATE_LOC;
+
+const privateKey = fs.readFileSync(PRIVATE_KEY_LOC, "utf8");
+const certificate = fs.readFileSync(CERTIFICATE_LOC, "utf8");
+
+const httpsServer = https.createServer({ key: privateKey, cert: certificate });
+httpsServer.listen(WEB_PORT);
 
 type ServerConfig = {
   next_id: number;
@@ -45,7 +54,7 @@ export default class Server {
     this.ReadConfigFile(config_files_dir);
     const auth = new Auth(path.join(CONFIG_DIR, "auth.json"));
 
-    this.websocket_ = new ServerSide(SOCKET_PORT, async (cookie: string) => {
+    this.websocket_ = new ServerSide(httpsServer, async (cookie: string) => {
       return await auth.AuthCookie(cookie, Privilages.kView);
     });
 
@@ -53,9 +62,13 @@ export default class Server {
       this.InitCamera(this.config_.camera_configs[i]);
     }
 
-    StartWebserver(auth, this);
+    StartWebserver(auth, httpsServer, this);
   }
 
+  /**
+   * GetCombinedSettings() - Gets all camera addresses and their settings
+   * @returns All camera addresses and settings
+   */
   GetCombinedSettings(): Array<{ address: string, settings: AllSettings }> {
     const combined_settings = [];
     for (let i = 0; i < this.cameras_.length; i++) {
@@ -67,14 +80,26 @@ export default class Server {
     return combined_settings;
   }
 
+  /**
+   * AddCamera() - Add a new camera to the server
+   * @param address address of camera
+   * @param pwd password of camera
+   * @returns the camera
+   */
   AddCamera(address: string, pwd: string): ConnectedCamera {
     const filename = this.config_.next_id + ".json";
     this.config_.next_id++;
+    this.config_.camera_configs.push(filename);
     fs.writeFileSync(path.join(this.config_files_dir_, "server_config.json"), JSON.stringify(this.config_));
-    fs.writeFileSync(path.join(this.config_files_dir_), filename), JSON.stringify({ address, pwd });
+    fs.writeFileSync(path.join(this.config_files_dir_, filename), JSON.stringify({ address, pwd }));
     return this.InitCamera(filename);
   }
 
+  /**
+   * GetCamera() - Fetches a specific camera
+   * @param address address of camera to fetch
+   * @returns camera or undefined if not found 
+   */
   GetCamera(address: string): ConnectedCamera | undefined {
     for (let i = 0; i < this.cameras_.length; i++) {
       if (this.cameras_[i].address == address) {
@@ -84,7 +109,11 @@ export default class Server {
     return undefined;
   }
 
-  GetCameraList() {
+  /**
+   * GetCameraList() - Get list of just camera addresses
+   * @returns List of all camera addresses
+   */
+  GetCameraList(): Array<string> {
     const list = [];
     for (let i = 0; i < this.config_.camera_configs.length; i++) {
       list.push(this.config_.camera_configs[i]);
@@ -92,6 +121,10 @@ export default class Server {
     return list;
   }
 
+  /**
+   * RemoveCamera() - Remove a camera from the server
+   * @param address address of camera to remove
+   */
   RemoveCamera(address: string) {
     console.log(`Removing camera with address: ${address}`);
     for (let i = 0; i < this.cameras_.length; i++) {
@@ -125,6 +158,11 @@ export default class Server {
     }
   }
 
+  /**
+   * InitCamera() - Initializes connection with camera
+   * @param filename filename of camera config
+   * @returns 
+   */
   private InitCamera(filename: string): ConnectedCamera {
     const config_loc = path.join(this.config_files_dir_, filename);
     const camera = new CameraClient(config_loc);
@@ -143,6 +181,7 @@ export default class Server {
     camera.events.on("disconnect", () => {
       console.warn(`Camera at address: ${connected_camera.address} disconnected`);
       try {
+        connected_camera.settings = undefined;
         connected_camera.processor.Stop();
       } catch { /* */ }
     });
@@ -168,6 +207,10 @@ export default class Server {
     return connected_camera;
   }
 
+  /**
+   * ReadConfigFile() - Reads the server config file
+   * @param config_files_dir directory of config files
+   */
   private ReadConfigFile(config_files_dir: string) {
     this.config_files_dir_ = config_files_dir;
     const data = fs.readFileSync(path.join(config_files_dir, "server_config.json"));

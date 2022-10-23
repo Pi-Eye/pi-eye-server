@@ -1,4 +1,4 @@
-import path, { resolve } from "path";
+import path from "path";
 import EventEmitter from "events";
 import TypedEventEmitter from "typed-emitter";
 import { AllSettings } from "camera-interface";
@@ -48,7 +48,7 @@ export default class Processor {
         });
       }
       catch (error) {
-        console.log(error);
+        console.warn(error);
       }
     });
   }
