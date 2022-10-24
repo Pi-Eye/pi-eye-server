@@ -31,12 +31,15 @@
   "dependencies": {
     "argon2": "^0.30.2",
     "camera-connection": "github:Pi-Eye/camera-connection",
+    "camera-interface": "github:Pi-Eye/camera-interface",
     "client-connection-server": "github:Pi-Eye/client-connection-server",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
+    "file-writer": "github:Pi-Eye/file-writer",
     "https": "^1.0.0",
     "node-stream-processor": "github:Pi-Eye/node-stream-processor",
     "node-stream-processor-types": "github:Pi-Eye/node-stream-processor-types",
+    "notification-handler": "github:Pi-Eye/notification-handler",
     "pi-eye-client": "github:Pi-Eye/pi-eye-client",
     "typed-emitter": "^2.1.0"
   }

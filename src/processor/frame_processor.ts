@@ -1,10 +1,15 @@
 import { AllSettings } from "camera-interface";
 import StreamProcessor from "node-stream-processor";
+import { Notifications } from "notification-handler";
+import { FileWriter } from "file-writer";
 
 
 let settings: AllSettings;
 let processor: StreamProcessor;
+let notif: Notifications;
+const file_writers: Array<FileWriter> = [];
 
+let frame_cache: Array<Buffer> = [];
 let process_queue: Array<{ frame: Buffer, timestamp: number }> = [];
 
 function ProcessFrame() {
@@ -16,6 +21,11 @@ function ProcessFrame() {
     header.writeUInt8((processed.motion) ? 1 : 0);
     header.writeBigUint64BE(BigInt(frame.timestamp), 1);
     process.send(Buffer.concat([header, processed.compressed]));
+
+    frame_cache.push(processed.compressed);
+    if (frame_cache.length > settings.motion.start_trigger_length) { frame_cache.shift(); }
+    notif.Frame(processed.compressed, frame.timestamp, processed.motion);
+    for (let i = 0; i < file_writers.length; i++) { file_writers[i].WriteFrame(processed.compressed); }
   }
   catch (error) {
     console.warn(error);
@@ -23,10 +33,44 @@ function ProcessFrame() {
   ProcessFrame();
 }
 
+function InitProcessorss(settings: AllSettings) {
+  processor = CreateStreamProcessor(settings);
+  notif = new Notifications(settings.text.cam_name, settings.motion, settings.notifications);
+  for (let i = 0; i < settings.files.length; i++) {
+    file_writers.push(new FileWriter(settings.text.cam_name, settings.camera.fps, settings.files[i]));
+  }
+
+  notif.events.on("start", () => {
+    console.log(`Motion started on ${settings.text.cam_name}`);
+    for (let i = 0; i < file_writers.length; i++) { file_writers[i].MotionStart(frame_cache); }
+    frame_cache = [];
+  });
+
+  notif.events.on("stop", () => {
+    console.log(`Motion stopped on ${settings.text.cam_name}`);
+    for (let i = 0; i < file_writers.length; i++) { file_writers[i].MotionStop(); }
+  });
+
+
+}
+
+function CreateStreamProcessor(settings: AllSettings): StreamProcessor {
+  if (settings.text && settings.motion && settings.device) {
+    return StreamProcessor.FullProcessor(settings.camera, settings.text, settings.motion, settings.device);
+  }
+  if (settings.text) {
+    return StreamProcessor.TextOverlay(settings.camera, settings.text);
+  }
+  if (settings.motion && settings.device) {
+    return StreamProcessor.MotionDetection(settings.camera, settings.motion, settings.device);
+  }
+  return StreamProcessor.SimpleProcessor(settings.camera);
+}
+
 
 process.once("message", (message: string) => {
   settings = JSON.parse(message);
-  processor = CreateStreamProcessor(settings);
+  InitProcessorss(settings);
 
   process.on("message", (message: Buffer) => {
     message = Buffer.from(message);
@@ -45,15 +89,3 @@ process.once("message", (message: string) => {
   });
 });
 
-function CreateStreamProcessor(settings: AllSettings): StreamProcessor {
-  if (settings.text && settings.motion && settings.device) {
-    return StreamProcessor.FullProcessor(settings.camera, settings.text, settings.motion, settings.device);
-  }
-  if (settings.text) {
-    return StreamProcessor.TextOverlay(settings.camera, settings.text);
-  }
-  if (settings.motion && settings.device) {
-    return StreamProcessor.MotionDetection(settings.camera, settings.motion, settings.device);
-  }
-  return StreamProcessor.SimpleProcessor(settings.camera);
-}
