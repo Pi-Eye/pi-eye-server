@@ -30,8 +30,7 @@ type ServerConfig = {
 
 type ProcessedCameraEvents = {
   frame: (frame: Buffer, timestamp: number, motion: boolean) => void;
-  motion: (frmae: Buffer, timestamp: number) => void;
-}
+};
 
 type ConnectedCamera = {
   address: string;
