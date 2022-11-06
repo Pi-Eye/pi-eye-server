@@ -38,11 +38,11 @@ Server side code of Pi-Eye
       $ENV:CMAKE_TOOLCHAIN_FILE="[path to vcpkg]/scripts/buildsystems/vcpkg.cmake"
       ```
 
-4. Clone repository
+3. Clone repository
     ```sh
     git clone https://github.com/Pi-Eye/pi-eye-server
 
-3. Install NPM package (this may take a long time)
+4. Install NPM package (this may take a long time)
     ```sh
     npm install
     ```
