@@ -1,4 +1,5 @@
 import fs from "fs";
+import http from "http";
 import https from "https";
 import path from "path";
 import { EventEmitter } from "events";
@@ -16,12 +17,7 @@ const WEB_PORT = parseInt(process.env.WEB_PORT) || 8080;
 const CONFIG_DIR = process.env.CONFIG_DIR || path.join(__dirname, "..", "..", "config");
 const PRIVATE_KEY_LOC = process.env.PRIVATE_KEY_LOC;
 const CERTIFICATE_LOC = process.env.CERTIFICATE_LOC;
-
-const privateKey = fs.readFileSync(PRIVATE_KEY_LOC, "utf8");
-const certificate = fs.readFileSync(CERTIFICATE_LOC, "utf8");
-
-const httpsServer = https.createServer({ key: privateKey, cert: certificate });
-httpsServer.listen(WEB_PORT);
+const USE_HTTPS = process.env.USE_HTTPS === "true";
 
 type ServerConfig = {
   next_id: number;
@@ -53,7 +49,20 @@ export default class Server {
     this.ReadConfigFile(config_files_dir);
     const auth = new Auth(path.join(CONFIG_DIR, "auth.json"));
 
-    this.websocket_ = new ServerSide(httpsServer, async (cookie: string) => {
+    let http_server;
+    if (USE_HTTPS) {
+      const privateKey = fs.readFileSync(PRIVATE_KEY_LOC, "utf8");
+      const certificate = fs.readFileSync(CERTIFICATE_LOC, "utf8");
+    
+      http_server = https.createServer({ key: privateKey, cert: certificate });
+    }
+    else {
+      http_server = http.createServer();
+    }
+
+    http_server.listen(WEB_PORT);
+
+    this.websocket_ = new ServerSide(http_server, async (cookie: string) => {
       return await auth.AuthCookie(cookie, Privilages.kView);
     });
 
@@ -61,7 +70,7 @@ export default class Server {
       this.InitCamera(this.config_.camera_configs[i]);
     }
 
-    StartWebserver(auth, httpsServer, this);
+    StartWebserver(auth, http_server, this);
   }
 
   /**

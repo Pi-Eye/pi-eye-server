@@ -1,3 +1,4 @@
+import http from "http";
 import https from "https";
 import express from "express";
 import { static_path, index } from "pi-eye-client";
@@ -8,7 +9,7 @@ import Auth, { Privilages } from "./auth";
 
 const SOCKET_ADDRESS = process.env.SOCKET_ADDRESS;
 
-export default function StartWebserver(auth: Auth, https_server: https.Server, server: Server) {
+export default function StartWebserver(auth: Auth, https_server: https.Server | http.Server, server: Server) {
   const app = express();
   app.use(express.static(static_path));
   app.use(express.json());
