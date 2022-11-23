@@ -5,6 +5,7 @@ import path from "path";
 import { EventEmitter } from "events";
 import TypedEmitter from "typed-emitter";
 
+import { Notifications } from "notification-handler";
 import { CameraClient } from "camera-connection";
 import ServerSide from "client-connection-server";
 import { AllSettings } from "camera-interface";
@@ -53,7 +54,7 @@ export default class Server {
     if (USE_HTTPS) {
       const privateKey = fs.readFileSync(PRIVATE_KEY_LOC, "utf8");
       const certificate = fs.readFileSync(CERTIFICATE_LOC, "utf8");
-    
+
       http_server = https.createServer({ key: privateKey, cert: certificate });
     }
     else {
@@ -189,9 +190,16 @@ export default class Server {
     camera.events.on("disconnect", () => {
       console.warn(`Camera at address: ${connected_camera.address} disconnected`);
       try {
-        connected_camera.settings = undefined;
         connected_camera.processor.Stop();
       } catch { /* */ }
+      if (connected_camera.settings) {
+        const notif = new Notifications(connected_camera.settings.text.cam_name, connected_camera.settings.motion, connected_camera.settings.notifications);
+        connected_camera.settings = undefined;
+        setTimeout(() => {
+          console.warn(`Camera at address: ${connected_camera.address} disconnected and did not reconnected after 30 seconds`);
+          notif.SendDisconnectEmail();
+        }, 30 * 1000);
+      }
     });
 
     camera.events.on("error", () => {
