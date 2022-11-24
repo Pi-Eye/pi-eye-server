@@ -1,6 +1,8 @@
 import http from "http";
 import https from "https";
+import path from "path";
 import express from "express";
+import favicon from "serve-favicon";
 import { static_path, index } from "pi-eye-client";
 
 import Server from "../server";
@@ -13,6 +15,7 @@ export default function StartWebserver(auth: Auth, https_server: https.Server | 
   const app = express();
   app.use(express.static(static_path));
   app.use(express.json());
+  app.use(favicon(path.join(static_path, "favicon.ico")));
 
   app.get("/", (req, res) => {
     res.sendFile(index);

@@ -29,6 +29,7 @@
     "typescript": "^4.8.4"
   },
   "dependencies": {
+    "@types/serve-favicon": "^2.5.3",
     "argon2": "^0.30.2",
     "camera-connection": "github:Pi-Eye/camera-connection",
     "camera-interface": "github:Pi-Eye/camera-interface",
@@ -41,6 +42,7 @@
     "node-stream-processor-types": "github:Pi-Eye/node-stream-processor-types",
     "notification-handler": "github:Pi-Eye/notification-handler",
     "pi-eye-client": "github:Pi-Eye/pi-eye-client",
+    "serve-favicon": "^2.5.0",
     "typed-emitter": "^2.1.0"
   }
 }
