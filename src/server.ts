@@ -198,7 +198,7 @@ export default class Server {
         setTimeout(() => {
           console.warn(`Camera at address: ${connected_camera.address} disconnected and did not reconnected after 30 seconds`);
           notif.SendDisconnectEmail();
-        }, 30 * 1000);
+        }, 60 * 1000);
       }
     });
 
