@@ -196,8 +196,10 @@ export default class Server {
         const notif = new Notifications(connected_camera.settings.text.cam_name, connected_camera.settings.motion, connected_camera.settings.notifications);
         connected_camera.settings = undefined;
         setTimeout(() => {
-          console.warn(`Camera at address: ${connected_camera.address} disconnected and did not reconnected after 30 seconds`);
-          notif.SendDisconnectEmail();
+          if (!connected_camera.settings) {
+            console.warn(`Camera at address: ${connected_camera.address} disconnected and did not reconnect after 30 seconds`);
+            notif.SendDisconnectEmail();
+          }
         }, 60 * 1000);
       }
     });
