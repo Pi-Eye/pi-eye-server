@@ -28,6 +28,14 @@ export default class Processor {
       const frame = processed.subarray(9);
       this.frames_.emit(timestamp.toString(), frame, timestamp, motion);
     });
+
+    this.child_.on("error", (error) => {
+      console.warn(error);
+    });
+
+    this.child_.on("close", (code) => {
+      console.warn(`Processor closed with code: ${code}`);
+    });
   }
 
   Stop() {
@@ -41,7 +49,7 @@ export default class Processor {
       header.writeBigUInt64BE(BigInt(timestamp));
       try {
         this.child_.send(Buffer.concat([header, frame]));
-        
+
         setTimeout(() => this.frames_.removeAllListeners(timestamp.toString()), 60000);
         this.frames_.once(timestamp.toString(), (frame, timestamp, motion) => {
           resolve({ frame, timestamp, motion });
