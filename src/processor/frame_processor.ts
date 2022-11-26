@@ -67,6 +67,7 @@ function CreateStreamProcessor(settings: AllSettings): StreamProcessor {
   return StreamProcessor.SimpleProcessor(settings.camera);
 }
 
+let stop = false;
 const stop_sig = Buffer.from([0xff, 0x00, 0xff]);
 process.once("message", (message: string) => {
   settings = JSON.parse(message);
@@ -76,8 +77,9 @@ process.once("message", (message: string) => {
     message = Buffer.from(message);
     if (Buffer.compare(message, stop_sig)) {
       Stop();
-      return;
+      stop = true;
     }
+    if (stop) return;
     const timestamp = Number(message.readBigUInt64BE(0));
     process_queue.push({ frame: message.subarray(8), timestamp });
     if (process_queue.length > 30) {
