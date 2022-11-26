@@ -73,7 +73,10 @@ process.once("message", (message: string) => {
   InitProcessorss(settings);
 
   process.on("message", (message: Buffer) => {
-    if (message == stop_sig) Stop();
+    if (Buffer.compare(message, stop_sig)) {
+      Stop();
+      return;
+    }
     message = Buffer.from(message);
     const timestamp = Number(message.readBigUInt64BE(0));
     process_queue.push({ frame: message.subarray(8), timestamp });
