@@ -75,7 +75,7 @@ process.once("message", (message: string) => {
 
   process.on("message", (message: Buffer) => {
     message = Buffer.from(message);
-    if (Buffer.compare(message, stop_sig)) {
+    if (stop_sig.equals(message)) {
       Stop();
       stop = true;
     }
