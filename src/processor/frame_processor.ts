@@ -89,3 +89,9 @@ process.once("message", (message: string) => {
   });
 });
 
+process.on("SIGINT", () => {
+  for (let i = 0; i < file_writers.length; i++) {
+    file_writers[i].Stop();
+  }
+  process.exit();
+});

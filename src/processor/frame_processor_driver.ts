@@ -31,7 +31,7 @@ export default class Processor {
   }
 
   Stop() {
-    this.child_.kill();
+    this.child_.kill("SIGINT");
     this.frames_.removeAllListeners();
   }
 
