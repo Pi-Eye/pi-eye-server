@@ -67,12 +67,13 @@ function CreateStreamProcessor(settings: AllSettings): StreamProcessor {
   return StreamProcessor.SimpleProcessor(settings.camera);
 }
 
-
+const stop_sig = Buffer.from([0xff, 0x00, 0xff]);
 process.once("message", (message: string) => {
   settings = JSON.parse(message);
   InitProcessorss(settings);
 
   process.on("message", (message: Buffer) => {
+    if (message == stop_sig) Stop();
     message = Buffer.from(message);
     const timestamp = Number(message.readBigUInt64BE(0));
     process_queue.push({ frame: message.subarray(8), timestamp });
@@ -89,9 +90,11 @@ process.once("message", (message: string) => {
   });
 });
 
-process.on("SIGINT", () => {
+function Stop() {
   for (let i = 0; i < file_writers.length; i++) {
     file_writers[i].Stop();
   }
-  process.exit();
-});
+  setTimeout(() => {
+    process.exit();
+  }, 5000);
+}

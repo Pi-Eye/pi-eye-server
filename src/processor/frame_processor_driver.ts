@@ -31,7 +31,7 @@ export default class Processor {
   }
 
   Stop() {
-    this.child_.kill("SIGINT");
+    this.child_.send(Buffer.from([0xff, 0x00, 0xff]));
     this.frames_.removeAllListeners();
   }
 
